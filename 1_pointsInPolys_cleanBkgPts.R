@@ -24,7 +24,7 @@ library(rgeos)
 ## two lines need your attention. The one directly below (loc_scripts)
 ## and about line 38 where you choose which polygon file to use
 
-loc_scripts <- "K:/Reg5Modeling_Project/scripts/Regional_SDM"
+loc_scripts <- "D:\\Git_Repos\\Regional_SDM"
 source(paste(loc_scripts, "0_pathsAndSettings.R", sep = "/"))
 
 setwd(loc_spPoly)
@@ -45,7 +45,7 @@ sppCode <- shpName
 presPolys <- readOGR(fileName, layer = shpName) #Z-dimension discarded msg is OK
 #check for proper column names. If no error from next code block, then good to go
 shpColNms <- names(presPolys@data)
-desiredCols <- c("EO_ID_ST", "SNAME", "SCOMNAME", "RA")
+desiredCols <- c("EO_ID", "SCIEN_NAME", "COMMONNAME", "ERACCURACY")
 if("FALSE" %in% c(desiredCols %in% shpColNms)) {
 	  stop("at least one column is missing or incorrectly named")
   } else {
@@ -92,14 +92,14 @@ att.pt$PolySampNum <- round(400*((2/(1+exp(-(att.pt[,"aream2"]/900+1)*0.004)))-1
 att.pt <- cbind(att.pt, "panelNum" = paste("poly_",att.pt$expl_id, sep=""))
 
 # sample must be equal or larger than the RA sample size in the random forest model
-att.pt$ra <- factor(tolower(as.character(att.pt$ra)))
+att.pt$eraccuracy <- factor(tolower(as.character(att.pt$eraccuracy)))
 
-EObyRA <- unique(att.pt[,c("expl_id", "eo_id_st","ra")])
-EObyRA$minSamps[EObyRA$ra == "very high"] <- 5
-EObyRA$minSamps[EObyRA$ra == "high"] <- 4
-EObyRA$minSamps[EObyRA$ra == "medium"] <- 3
-EObyRA$minSamps[EObyRA$ra == "low"] <- 2
-EObyRA$minSamps[EObyRA$ra == "very low"] <- 1
+EObyRA <- unique(att.pt[,c("expl_id", "eo_id","eraccuracy")])
+EObyRA$minSamps[EObyRA$eraccuracy == "very high"] <- 5
+EObyRA$minSamps[EObyRA$eraccuracy == "high"] <- 4
+EObyRA$minSamps[EObyRA$eraccuracy == "medium"] <- 3
+EObyRA$minSamps[EObyRA$eraccuracy == "low"] <- 2
+EObyRA$minSamps[EObyRA$eraccuracy == "very low"] <- 1
 
 att.pt.2 <- merge(x = att.pt, y = EObyRA[,c("expl_id","minSamps")], 
                   all.x = TRUE, by.x = "expl_id", by.y = "expl_id")
@@ -184,8 +184,8 @@ writeOGR(ranPts, dsn = fullName, layer = nm.RanPtFile,
 
 # Write out various stats and data to the database ------
 # prep the data
-OutPut <- data.frame(SciName = paste(att.pt[1,"sname"]),
-	CommName=paste(att.pt[1,"scomname"]),
+OutPut <- data.frame(SciName = paste(att.pt[1,"scien_name"]),
+	CommName=paste(att.pt[1,"commonname"]),
 	ElemCode=sppCode,
 	RandomPtFile=nm.RanPtFile,
 	date = paste(Sys.Date()),

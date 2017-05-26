@@ -10,7 +10,7 @@ library(randomForest)
 ## two lines need your attention. The one directly below (loc_scripts)
 ## and about line 26 where you choose which Rdata file to use,
 
-loc_scripts <- "K:/Reg5Modeling_Project/scripts/Regional_SDM"
+loc_scripts <- "D:\\Git_Repos\\Regional_SDM"
 
 # get paths, other settings
 source(paste(loc_scripts,"0_pathsAndSettings.R", sep="/"))
@@ -29,7 +29,7 @@ load(fileList[[n]])
 ##Make the raster stack
 stackOrder <- names(df.full)[indVarCols]
 setwd(loc_envVars)
-rasL <- paste(stackOrder,".tif", sep="")
+rasL <- paste(stackOrder,".grd", sep="")
 fullL <- as.list(paste(loc_envVars, rasL, sep="/"))
 names(fullL) <- stackOrder
 envStack <- stack(fullL)

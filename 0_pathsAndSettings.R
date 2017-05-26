@@ -7,28 +7,28 @@
 # These locations require data created not as part of these scripts
 
 # The folder that has your species polygon data. 
-loc_spPoly <- "K:/Reg5Modeling_Project/inputs/species/glypmuhl/polygon_data"
+loc_spPoly <- "W:\\Projects\\Lands&Forests\\2016_PROs\\2016_Polygons\\EDM_feature_polys"
 
 # This is the full path and name of the information-tracking database
-nm_db_file <- "K:/Reg5Modeling_Project/databases/SDM_lookupAndTracking.sqlite"
+nm_db_file <- "D:\\Git_Repos\\PROs\\BackEnd.sqlite"
 
 # This is the background random points shapefile, path then name (without the 'shp)
-loc_bkgPts <- "K:/Reg5Modeling_Project/inputs/background"
-nm_bkgPts <- "bkgrd_att"
+loc_bkgPts <- "D:\\GIS Projects\\Lands_Forests\\BackgroundPoints"
+nm_bkgPts <- "10k_backgroundPts_2_att"
 
 # the folder containing all environmental variable raster (tiffs)
-loc_envVars <- "K:/Reg5Modeling_Project/inputs/env_vars/geotiffs_masked"
+loc_envVars <- "D:\\GIS Projects\\Lands_Forests\\Env_Var_Copy"
 
 # the path where the next two shapefiles are stored
-loc_otherSpatial <- "K:/Reg5Modeling_Project/other_spatial"
+loc_otherSpatial <- "D:\\GIS Projects\\Lands_Forests\\other_spatial"
 
 # A shapefile showing state boundaries (or other reference boundaries)
 # used in the map produced in the metadata
-nm_refBoundaries <- "StateBoundariesAlbersConicEqualArea"
+nm_refBoundaries <- "NY_bound_mod"
 
 # A shapefile showing the extent of the study area over which the model 
 # was created. This is also used in the metadata map.
-nm_studyAreaExtent <- "reg5_pred_20161027"
+nm_studyAreaExtent <- "NY_bound_mod"
 
 
 # Set destination folders ----
@@ -36,13 +36,13 @@ nm_studyAreaExtent <- "reg5_pred_20161027"
 # In many cases, they become input folders later in the process. 
 
 # The folder for species point data
-loc_spPts <- "K:/Reg5Modeling_Project/inputs/species/glypmuhl/point_data"
+loc_spPts <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\inputs\\species\\points_data"
 
 # output folder for RData files
-loc_RDataOut <- "K:/Reg5Modeling_Project/outputs"
+loc_RDataOut <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\outputs"
 
 # output folder for grids (raster predictions)
-loc_outRas <- "K:/Reg5Modeling_Project/outputs/grids"
+loc_outRas <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\outputs\\grids"
 
 # output folder for metadata
-loc_outMetadata <- "K:/Reg5Modeling_Project/outputs/metadata"
+loc_outMetadata <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\outputs\\metadata"

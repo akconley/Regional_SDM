@@ -16,7 +16,7 @@ library(randomForest)
 ## three lines need your attention. The one directly below (loc_scripts),
 ## about line 29 where you choose which Rdata file to use,
 ## and about line 40 where you choose which record to use
-loc_scripts <- "K:/Reg5Modeling_Project/scripts/Regional_SDM"
+loc_scripts <- "D:\\Git_Repos\\Regional_SDM"
 
 source(paste(loc_scripts, "0_pathsAndSettings.R", sep = "/"))
 setwd(loc_spPts)
@@ -34,6 +34,7 @@ df.in <-read.dbf(presFile)
 
 setwd(loc_bkgPts)
 bk_fileList <- dir( pattern = "_clean.dbf$")
+
 bk_fileList
 #look at the output and choose which shapefile you want to run
 #enter its location in the list (first = 1, second = 2, etc)
@@ -51,40 +52,40 @@ df.abs <- df.abs[complete.cases(df.abs),]
 # add some fields to each
 df.in <- cbind(df.in, pres=1)
 df.abs$stratum <- "pseu-a"
-df.abs <- cbind(df.abs, EO_ID_ST="pseu-a", 
-					pres=0, RA="high", SNAME="background")
+df.abs <- cbind(df.abs, eo_id="pseu-a", 
+					pres=0, eraccuracy="high", scien_name="background")
 
 # lower case column names
 names(df.in) <- tolower(names(df.in))
 names(df.abs) <- tolower(names(df.abs))
 
 # get a list of env vars from the folder used to create the raster stack
-raslist <- list.files(path = loc_envVars, pattern = ".tif$")
-rasnames <- gsub(".tif", "", raslist)
+raslist <- list.files(path = loc_envVars, pattern = ".grd$")
+rasnames <- gsub(".grd", "", raslist)
 
 # are these all in the lookup database? Checking here.
 db <- dbConnect(SQLite(),dbname=nm_db_file)  
 op <- options("useFancyQuotes") 
 options(useFancyQuotes = FALSE) #sQuote call unhappy with fancy quote, turn off
-SQLquery <- paste("SELECT gridName, fullName FROM lkpEnvVars WHERE gridName in (", 
+SQLquery <- paste("SELECT code, fullName FROM tblEnvVarNames WHERE code in (", 
                   toString(sQuote(rasnames)),
                   "); ", sep = "")
 namesInDB <- dbGetQuery(db, statement = SQLquery)
-namesInDB$gridName <- tolower(namesInDB$gridName)
+namesInDB$code <- tolower(namesInDB$code)
 rasnames <- tolower(rasnames)
 
 ## this prints rasters not in the lookup database
 ## if blank you are good to go, otherwise figure out what's up
-rasnames[!rasnames %in% namesInDB$gridName]
+rasnames[!rasnames %in% namesInDB$code]
 
 ## this prints out the rasters that don't appear as a column name
 ## in df.in (meaning it wasn't used to attribute or the name is funky)
 ## if blank you are good to go
 rasnames[!rasnames %in% names(df.in)]
 
-# get a list of all distance-to env vars
-SQLquery <- "SELECT gridName FROM lkpEnvVars WHERE distToGrid = 1;"
-dtGrids <- dbGetQuery(db, statement = SQLquery)
+# # get a list of all distance-to env vars
+# SQLquery <- "SELECT gridName FROM lkpEnvVars WHERE distToGrid = 1;"
+# dtGrids <- dbGetQuery(db, statement = SQLquery)
 
 # clean up
 options(op)
@@ -96,17 +97,17 @@ rm(db)
 #   (this can cause erroneous, non-biological relationships that should
 #    not be driving the model. Group decision to remove.)
 
-# get the ones we are using here
-dtRas <- rasnames[rasnames %in% dtGrids$gridName]
-# what's the closest distance for each?
-dtRas.min <- apply(df.in[,dtRas], 2, min)
-# remove those whose closest distance is greater than 10km
-dtRas.sub <- dtRas.min[dtRas.min > 10000]
-rasnames <- rasnames[!rasnames %in% names(dtRas.sub)]
+# # get the ones we are using here
+# dtRas <- rasnames[rasnames %in% dtGrids$gridName]
+# # what's the closest distance for each?
+# dtRas.min <- apply(df.in[,dtRas], 2, min)
+# # remove those whose closest distance is greater than 10km
+# dtRas.sub <- dtRas.min[dtRas.min > 10000]
+# rasnames <- rasnames[!rasnames %in% names(dtRas.sub)]
 
 # clean up, merge data sets -----
 # this is the full list of fields, arranged appropriately
-colList <- c("sname","eo_id_st","pres","stratum", "ra", rasnames)
+colList <- c("scien_name","eo_id","pres","stratum", "eraccuracy", rasnames)
 
 # if colList gets modified, 
 # also modify the locations for the independent and dependent variables, here
@@ -145,34 +146,34 @@ dbDisconnect(db)
 rm(db)
 
 # row bind the pseudo-absences with the presence points
-df.abs$eo_id_st <- factor(df.abs$eo_id_st)
+df.abs$eo_id <- factor(df.abs$eo_id)
 df.full <- rbind(df.in, df.abs)
 
 # reset these factors
 df.full$stratum <- factor(df.full$stratum)
-df.full$eo_id_st <- factor(df.full$eo_id_st)
+df.full$eo_id <- factor(df.full$eo_id)
 df.full$pres <- factor(df.full$pres)
-df.full$ra <- factor(tolower(as.character(df.full$ra)))
-df.full$sname <- factor(df.full$sname)
+df.full$eraccuracy <- factor(tolower(as.character(df.full$eraccuracy)))
+df.full$scien_name <- factor(df.full$scien_name)
 
 # make samp size groupings ----
-EObyRA <- unique(df.full[,c("eo_id_st","ra")])
-EObyRA$sampSize[EObyRA$ra == "very high"] <- 5
-EObyRA$sampSize[EObyRA$ra == "high"] <- 4
-EObyRA$sampSize[EObyRA$ra == "medium"] <- 3
-EObyRA$sampSize[EObyRA$ra == "low"] <- 2
-EObyRA$sampSize[EObyRA$ra == "very low"] <- 1
+EObyRA <- unique(df.full[,c("eo_id","eraccuracy")])
+EObyRA$sampSize[EObyRA$eraccuracy == "very high"] <- 5
+EObyRA$sampSize[EObyRA$eraccuracy == "high"] <- 4
+EObyRA$sampSize[EObyRA$eraccuracy == "medium"] <- 3
+EObyRA$sampSize[EObyRA$eraccuracy == "low"] <- 2
+EObyRA$sampSize[EObyRA$eraccuracy == "very low"] <- 1
 # set the background pts to the sum of the EO samples
-EObyRA$sampSize[EObyRA$eo_id_st == "pseu-a"] <- sum(EObyRA[!EObyRA$eo_id_st == "pseu-a", "sampSize"])
+EObyRA$sampSize[EObyRA$eo_id == "pseu-a"] <- sum(EObyRA[!EObyRA$eo_id == "pseu-a", "sampSize"])
 
 # there appear to be cases where more than one 
 # RA is assigned per EO. Handle it here by 
 # taking max value
-EObySS <- aggregate(EObyRA$sampSize, by=list(EObyRA$eo_id_st), max)
-names(EObySS) <- c("eo_id_st","sampSize")
+EObySS <- aggregate(EObyRA$sampSize, by=list(EObyRA$eo_id), max)
+names(EObySS) <- c("eo_id","sampSize")
 
 sampSizeVec <- EObySS$sampSize
-names(sampSizeVec) <- as.character(EObySS$eo_id_st)
+names(sampSizeVec) <- as.character(EObySS$eo_id)
 
 
 ##
@@ -181,14 +182,14 @@ names(sampSizeVec) <- as.character(EObySS$eo_id_st)
 x <- tuneRF(df.full[,indVarCols],
              y=df.full[,depVarCol],
              ntreeTry = 300, stepFactor = 2, mtryStart = 6,
-            strata = df.full$eo_id_st, sampsize = sampSizeVec, replace = TRUE)
+            strata = df.full$eo_id, sampsize = sampSizeVec, replace = TRUE)
 
 newTry <- x[x[,2] == min(x[,2]),1]
 
 y <- tuneRF(df.full[,indVarCols],
             y=df.full[,depVarCol],
             ntreeTry = 300, stepFactor = 1.5, mtryStart = max(newTry),
-            strata = df.full$eo_id_st, sampsize = sampSizeVec, replace = TRUE)
+            strata = df.full$eo_id, sampsize = sampSizeVec, replace = TRUE)
 
 mtry <- max(y[y[,2] == min(y[,2]),1])
 rm(x,y)
@@ -203,7 +204,7 @@ rf.find.envars <- randomForest(df.full[,indVarCols],
                         importance=TRUE,
                         ntree=ntrees,
                         mtry=mtry,
-                        strata = df.full$eo_id_st, sampsize = sampSizeVec, replace = TRUE)
+                        strata = df.full$eo_id, sampsize = sampSizeVec, replace = TRUE)
 
 impvals <- importance(rf.find.envars, type = 1)
 OriginalNumberOfEnvars <- length(impvals)
@@ -241,8 +242,8 @@ df.in2 <- subset(df.full,pres == "1")
 df.abs2 <- subset(df.full, pres == "0")
 df.in2$stratum <- factor(df.in2$stratum)
 df.abs2$stratum <- factor(df.abs2$stratum)
-df.in2$eo_id_st <- factor(df.in2$eo_id_st)
-df.abs2$eo_id_st <- factor(df.abs2$eo_id_st)
+df.in2$eo_id <- factor(df.in2$eo_id)
+df.abs2$eo_id <- factor(df.abs2$eo_id)
 df.in2$pres <- factor(df.in2$pres)
 df.abs2$pres <- factor(df.abs2$pres)
 
@@ -253,24 +254,24 @@ row.names(df.abs2) <- 1:nrow(df.abs2)
 #how many polygons do we have?
 numPys <-  nrow(table(df.in2$stratum))
 #how many EOs do we have?
-numEOs <- nrow(table(df.in2$eo_id_st))
+numEOs <- nrow(table(df.in2$eo_id))
 
 #initialize the grouping list, and set up grouping variables
 #if we have fewer than 10 EOs, move forward with jackknifing by polygon, otherwise
 #jackknife by EO.
 group <- vector("list")
-# group$colNm <- ifelse(numEOs < 10,"stratum","eo_id_st")
+# group$colNm <- ifelse(numEOs < 10,"stratum","eo_id")
 # group$JackknType <- ifelse(numEOs < 10,"polygon","element occurrence")
 # if(numEOs < 10) {
 # 		group$vals <- unique(df.in2$stratum)
 # } else {
-# 		group$vals <- unique(df.in2$eo_id_st)
+# 		group$vals <- unique(df.in2$eo_id)
 # }
 ## TODO: bring back by-polygon validation. SampSize needs to be able to handle this to make it possible
 # only validate by EO at this time:
-group$colNm <- "eo_id_st"
+group$colNm <- "eo_id"
 group$JackknType <- "element occurrence"
-group$vals <- unique(df.in2$eo_id_st)
+group$vals <- unique(df.in2$eo_id)
 
 #reduce the number of trees if group$vals has more than 30 entries
 #this is for validation
@@ -334,7 +335,7 @@ if(length(group$vals)>1){
 		  trSetBG <-  df.abs2[-TrBGsamps,]  #get everything that isn't in TrBGsamps
 		   # join em, clean up
 		  trSet <- rbind(trSet, trSetBG)
-		  trSet$eo_id_st <- factor(trSet$eo_id_st)
+		  trSet$eo_id <- factor(trSet$eo_id)
 		  evSet[[i]] <- rbind(evSet[[i]], evSetBG)
 		  
 		  ssVec <- sampSizeVec[!names(sampSizeVec) == group$vals[[i]]]
@@ -518,7 +519,7 @@ rf.full <- randomForest(df.full[,indVarCols],
                         importance=TRUE,
                         ntree=ntrees,
                         mtry=mtry,
-                        strata = df.full[,"eo_id_st"],
+                        strata = df.full[,"eo_id"],
                         sampsize = sampSizeVec, replace = TRUE,
                         norm.votes = TRUE)
 
@@ -568,3 +569,4 @@ save.image(file = paste(ElementNames$Code, "_",Sys.Date(),".Rdata", sep=""))
 ## clean up ----
 # remove all objects before moving on to the next script
 rm(list=ls())
+

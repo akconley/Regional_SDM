@@ -24,7 +24,7 @@ library(xtable)
 ## about line 35 where you choose which Rdata file to use,
 ## and about line 46 where you choose which record to use
 
-loc_scripts <- "K:/Reg5Modeling_Project/scripts/Regional_SDM"
+loc_scripts <- "D:\\Git_Repos\\Regional_SDM"
 
 source(paste(loc_scripts, "0_pathsAndSettings.R", sep = "/"))
 
@@ -53,14 +53,14 @@ options(useFancyQuotes = FALSE)
 
 db <- dbConnect(SQLite(),dbname=nm_db_file)  
 SQLquery <- paste("Select lkpModelers.ProgramName, lkpModelers.FullOrganizationName, ",
-  "lkpModelers.City, lkpModelers.State, lkpSpecies.CODE ",
+  "lkpModelers.City, lkpModelers.State, tblPrepStats.ElemCode ",
   "FROM lkpModelers ", 
-  "INNER JOIN lkpSpecies ON lkpModelers.ModelerID=lkpSpecies.ModelerID ", 
-  "WHERE lkpSpecies.CODE='", ElementNames$Code, "'; ", sep="")
+  "INNER JOIN tblPrepStats ON lkpModelers.ModelerID=tblPrepStats.ModelerID ", 
+  "WHERE tblPrepStats.ElemCode='", ElementNames$Code, "'; ", sep="")
 sdm.modeler <- dbGetQuery(db, statement = SQLquery)
 
 SQLquery <- paste("SELECT sp.CODE, sr.ProgramName, sr.State ",
-  "FROM lkpSpecies as sp ",
+  "FROM tblPrepStats as sp ",
   "INNER JOIN mapDataSourcesToSpp as mp ON mp.EstID=sp.EST_ID ",
   "INNER JOIN lkpDataSources as sr ON mp.DataSourcesID=sr.DataSourcesID ",
   "WHERE sp.CODE='", ElementNames$Code, "'; ", sep="")
