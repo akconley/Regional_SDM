@@ -10,17 +10,17 @@
 loc_spPoly <- "W:\\Projects\\Lands&Forests\\2016_PROs\\2016_Polygons\\EDM_feature_polys"
 
 # This is the full path and name of the information-tracking database
-nm_db_file <- "D:\\Git_Repos\\PROs\\BackEnd.sqlite"
+nm_db_file <- "C:\\Users\\Public\\Git_Repos\\PROs\\BackEnd.sqlite"
 
 # This is the background random points shapefile, path then name (without the 'shp)
-loc_bkgPts <- "D:\\GIS Projects\\Lands_Forests\\BackgroundPoints"
+loc_bkgPts <- "C:\\Users\\Public\\2016_Pros\\BackgroundPoints"
 nm_bkgPts <- "10k_backgroundPts_2_att"
 
 # the folder containing all environmental variable raster (tiffs)
-loc_envVars <- "D:\\GIS Projects\\Lands_Forests\\Env_Var_Copy"
+loc_envVars <- "D:\\Env_Var_Copy\\Env_Variables"
 
 # the path where the next two shapefiles are stored
-loc_otherSpatial <- "D:\\GIS Projects\\Lands_Forests\\other_spatial"
+loc_otherSpatial <- "C:\\Users\\Public\\2016_Pros\\other_spatial"
 
 # A shapefile showing state boundaries (or other reference boundaries)
 # used in the map produced in the metadata
@@ -36,13 +36,13 @@ nm_studyAreaExtent <- "NY_bound_mod"
 # In many cases, they become input folders later in the process. 
 
 # The folder for species point data
-loc_spPts <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\inputs\\species\\points_data"
+loc_spPts <- "C:\\Users\\Public\\2016_Pros\\inputs\\species\\points_data"
 
 # output folder for RData files
-loc_RDataOut <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\outputs"
+loc_RDataOut <- "C:\\Users\\Public\\2016_Pros\\outputs"
 
 # output folder for grids (raster predictions)
-loc_outRas <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\outputs\\grids"
+loc_outRas <- "C:\\Users\\Public\\2016_Pros\\outputs\\grids"
 
 # output folder for metadata
-loc_outMetadata <- "D:\\GIS Projects\\Lands_Forests\\2016_PROs\\outputs\\metadata"
+loc_outMetadata <- "C:\\Users\\Public\\2016_Pros\\outputs\\metadata"

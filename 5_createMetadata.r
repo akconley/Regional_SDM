@@ -24,18 +24,23 @@ library(xtable)
 ## about line 35 where you choose which Rdata file to use,
 ## and about line 46 where you choose which record to use
 
-loc_scripts <- "D:\\Git_Repos\\Regional_SDM"
+loc_scripts <- "C:\\Users\\Public\\Git_Repos\\Regional_SDM"
 
 source(paste(loc_scripts, "0_pathsAndSettings.R", sep = "/"))
 
 # get a list of what's in the directory
 d <- dir(path = loc_RDataOut, pattern = ".Rdata",full.names=FALSE)
-d
+
+len_d<-length(d)
+len_d
 # which one do we want to run?
-n <- 1
+for (i in 3:len_d){
+n <- i
 fileName <- d[[n]]
 load(paste(loc_RDataOut,fileName, sep="/"))
-
+#If files were generated on a different machine, you need to resource the paths
+loc_scripts <- "C:\\Users\\Public\\Git_Repos\\Regional_SDM"
+source(paste(loc_scripts, "0_pathsAndSettings.R", sep = "/"))
 # get background poly data for the map
 referenceBoundaries <- readOGR(loc_otherSpatial, nm_refBoundaries, stringsAsFactors=FALSE) # name of state boundaries file
 studyAreaExtent <- readOGR(loc_otherSpatial, nm_studyAreaExtent, stringsAsFactors=FALSE) 
@@ -43,9 +48,17 @@ studyAreaExtent <- readOGR(loc_otherSpatial, nm_studyAreaExtent, stringsAsFactor
 r <- dir(path = loc_outRas, pattern = ".tif$",full.names=FALSE)
 r
 # which one do we want to run?
-n <- 1
-fileName <- r[[n]]
-ras <- raster(paste(loc_outRas, fileName, sep = "/"))
+#n <- 1
+#fileName <- r[[n]]
+rdata_name<- strsplit(fileName,"\\.")[[1]][[1]]
+
+
+#ras_fileName<-paste0(rdata_name,".tif")
+ras_fileName<-grep(sppCode,r,value=TRUE)
+
+
+
+ras <- raster(paste(loc_outRas, ras_fileName, sep = "/"))
 
 ## Get Program and Data Sources info ----
 op <- options("useFancyQuotes")
@@ -59,25 +72,25 @@ SQLquery <- paste("Select lkpModelers.ProgramName, lkpModelers.FullOrganizationN
   "WHERE tblPrepStats.ElemCode='", ElementNames$Code, "'; ", sep="")
 sdm.modeler <- dbGetQuery(db, statement = SQLquery)
 
-SQLquery <- paste("SELECT sp.CODE, sr.ProgramName, sr.State ",
-  "FROM tblPrepStats as sp ",
-  "INNER JOIN mapDataSourcesToSpp as mp ON mp.EstID=sp.EST_ID ",
-  "INNER JOIN lkpDataSources as sr ON mp.DataSourcesID=sr.DataSourcesID ",
-  "WHERE sp.CODE='", ElementNames$Code, "'; ", sep="")
-sdm.dataSources <- dbGetQuery(db, statement = SQLquery)
-sdm.dataSources <- sdm.dataSources[order(sdm.dataSources$ProgramName),]
+# SQLquery <- paste("SELECT sp.CODE, sr.ProgramName, sr.State ",
+#   "FROM tblPrepStats as sp ",
+#   "INNER JOIN mapDataSourcesToSpp as mp ON mp.EstID=sp.EST_ID ",
+#   "INNER JOIN lkpDataSources as sr ON mp.DataSourcesID=sr.DataSourcesID ",
+#   "WHERE sp.CODE='", ElementNames$Code, "'; ", sep="")
+# sdm.dataSources <- dbGetQuery(db, statement = SQLquery)
+# sdm.dataSources <- sdm.dataSources[order(sdm.dataSources$ProgramName),]
 
-SQLquery <- paste("SELECT ID, date, speciesCode, comments",
-                  " FROM tblCustomModelComments ", 
-                  "WHERE speciesCode='", ElementNames$Code, "'; ", sep="")
-sdm.customComments <- dbGetQuery(db, statement = SQLquery)
-# assume you want the most recently entered comments, if there are multiple entries
-if(nrow(sdm.customComments) > 1) {
-  sdm.customComments <- sdm.customComments[order(sdm.customComments$date, decreasing = TRUE),]
-  sdm.customComments.subset <- sdm.customComments[1,]
-} else {
-  sdm.customComments.subset <- sdm.customComments
-}
+# SQLquery <- paste("SELECT ID, date, speciesCode, comments",
+#                   " FROM tblCustomModelComments ", 
+#                   "WHERE speciesCode='", ElementNames$Code, "'; ", sep="")
+# sdm.customComments <- dbGetQuery(db, statement = SQLquery)
+# # assume you want the most recently entered comments, if there are multiple entries
+# if(nrow(sdm.customComments) > 1) {
+#   sdm.customComments <- sdm.customComments[order(sdm.customComments$date, decreasing = TRUE),]
+#   sdm.customComments.subset <- sdm.customComments[1,]
+# } else {
+#   sdm.customComments.subset <- sdm.customComments
+# }
 
 ## Get threshold information ----
 SQLquery <- paste("Select ElemCode, dateTime, cutCode, cutValue, capturedEOs, capturedPolys, capturedPts ", 
@@ -123,9 +136,15 @@ sdm.thresh.table$Pts <- paste(round(sdm.thresh.table$Pts/numPts*100, 1),
 setwd(loc_outMetadata)
 
 knit2pdf(paste(loc_scripts,"MetadataEval_knitr.rnw",sep="/"), output=paste(ElementNames$Code, "_",Sys.Date(), ".tex",sep=""))
+##Run it again
+knit2pdf(paste(loc_scripts,"MetadataEval_knitr.rnw",sep="/"), output=paste(ElementNames$Code, "_",Sys.Date(), ".tex",sep=""))
 
 ## clean up ----
 options(op)
 dbDisconnect(db)
 # remove all objects before moving on to the next script
+rm(list=ls()[!ls() %in% 
+               c("p_fileList","d","len_d","loc_scripts","loc_RDataOut","loc_bkgPts","loc_spPts","loc_envVars","nm_db_file","loc_otherSpatial","len_fileList")])
+
+}
 rm(list=ls())

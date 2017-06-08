@@ -122,25 +122,29 @@ df.abs <- df.abs[,colList]
 db <- dbConnect(SQLite(),dbname=nm_db_file)  
   
 ElementNames <- as.list(c(SciName="",CommName="",Code="",Type=""))
-ElementNames[1] <- as.character(df.in[1,"sname"])
+ElementNames[1] <- as.character(df.in[1,"scien_name"])
 
 # get the names used in metadata output
-SQLquery <- paste("SELECT CODE FROM lkpSpecies WHERE SCIEN_NAME = '", 
-	ElementNames[1],"' ;", sep="")
+# SQLquery <- paste("SELECT CODE FROM tblInputs WHERE SCIEN_NAME = '", 
+# 	ElementNames[1],"' ;", sep="")
+SQLquery <- paste("SELECT Code, RedoStat FROM tblInputs WHERE SCIEN_NAME = '", ElementNames[1],
+                  "' ORDER BY RedoStat DESC;", sep="")
 ElementNames[3] <- as.list(dbGetQuery(db, statement = SQLquery)[1,1])
 # populate the common name field
-SQLquery <- paste("SELECT COMMONNAME FROM lkpSpecies WHERE SCIEN_NAME = '", 
+SQLquery <- paste("SELECT COMMONName FROM tblInputs WHERE SCIEN_NAME = '", 
 	ElementNames[1],"';", sep="")
-ElementNames[2] <- dbGetQuery(db, statement = SQLquery)
+#ElementNames[2] <- dbGetQuery(db, statement = SQLquery)
+ElementNames[2] <- as.list(dbGetQuery(db, statement = SQLquery)[1,1])
 # populate element type (A or P)
-SQLquery <- paste("SELECT ELEMTYPE FROM lkpSpecies WHERE SCIEN_NAME = '", 
+SQLquery <- paste("SELECT ELEMTYPE FROM tblInputs WHERE SCIEN_NAME = '", 
 	ElementNames[1],"';", sep="")
+#ElementNames[4] <- as.list(dbGetQuery(db, statement = SQLquery)[1,1])
 ElementNames[4] <- as.list(dbGetQuery(db, statement = SQLquery)[1,1])
 ElementNames
 
-#also get correlated env var information
-SQLquery <- "SELECT gridName, correlatedVarGroupings FROM lkpEnvVars WHERE correlatedVarGroupings NOT NULL;"
-corrdEVs <- dbGetQuery(db, statement = SQLquery)
+# #also get correlated env var information
+# # SQLquery <- "SELECT gridName, correlatedVarGroupings FROM tblEnvVarNames WHERE correlatedVarGroupings NOT NULL;"
+# corrdEVs <- dbGetQuery(db, statement = SQLquery)
 
 dbDisconnect(db)
 rm(db)
@@ -210,13 +214,13 @@ impvals <- importance(rf.find.envars, type = 1)
 OriginalNumberOfEnvars <- length(impvals)
 
 # first remove the bottom of the correlated vars
-for(grp in unique(corrdEVs$correlatedVarGroupings)){
-  vars <- tolower(corrdEVs[corrdEVs$correlatedVarGroupings == grp,"gridName"])
-  imp.sub <- impvals[rownames(impvals) %in% vars,, drop = FALSE]
-  varsToDrop <- imp.sub[!imp.sub == max(imp.sub),, drop = FALSE]
-  impvals <- impvals[!rownames(impvals) %in% varsToDrop,,drop = FALSE]
-}
-rm(vars, imp.sub, varsToDrop)
+# for(grp in unique(corrdEVs$correlatedVarGroupings)){
+#   vars <- tolower(corrdEVs[corrdEVs$correlatedVarGroupings == grp,"gridName"])
+#   imp.sub <- impvals[rownames(impvals) %in% vars,, drop = FALSE]
+#   varsToDrop <- imp.sub[!imp.sub == max(imp.sub),, drop = FALSE]
+#   impvals <- impvals[!rownames(impvals) %in% varsToDrop,,drop = FALSE]
+# }
+# rm(vars, imp.sub, varsToDrop)
 
 # set the percentile, here choosing above 25% percentile
 envarPctile <- 0.25
@@ -532,12 +536,12 @@ f.imp <- f.imp[,"MeanDecreaseAccuracy"]
 
 db <- dbConnect(SQLite(),dbname=nm_db_file)  
 # get importance data, set up a data frame
-EnvVars <- data.frame(gridName = names(f.imp), impVal = f.imp, fullName="", stringsAsFactors = FALSE)
+EnvVars <- data.frame(code = names(f.imp), impVal = f.imp, fullName="", stringsAsFactors = FALSE)
 #set the query for the following lookup, note it builds many queries, equal to the number of vars
-SQLquery <- paste("SELECT gridName, fullName FROM lkpEnvVars WHERE gridName COLLATE NOCASE in ('", paste(EnvVars$gridName,sep=", "),
+SQLquery <- paste("SELECT code, fullName FROM tblEnvVarNames WHERE code COLLATE NOCASE in ('", paste(EnvVars$code,sep=", "),
 					"'); ", sep="")
 #cycle through all select statements, put the results in the df
-for(i in 1:length(EnvVars$gridName)){
+for(i in 1:length(EnvVars$code)){
   EnvVars$fullName[i] <- as.character(dbGetQuery(db, statement = SQLquery[i])[,2])
   }
 ##clean up
