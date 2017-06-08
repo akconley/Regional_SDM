@@ -24,23 +24,39 @@ setwd(loc_spPts)
 #get a list of what's in the directory
 p_fileList <- dir( pattern = "_att.dbf$")
 p_fileList
+#pull_list<-readLines("D:\\Git_Repos\\PROs\\Files_coded_ready_for_points.csv")
+pull_list<-readLines("D:\\Git_Repos\\PROs\\Files_coded_ready_for_points_6_6.csv")
+
+
+p_fileList <- unique (grep(paste(pull_list,collapse="|"), 
+                           p_fileList, value=TRUE))
+
+len_fileList<-length(p_fileList)
+len_fileList
+
 #look at the output and choose which shapefile you want to run
 #enter its location in the list (first = 1, second = 2, etc)
-n <- 1
 
+for (i in 5:len_fileList){
+n <- i
 presFile <- p_fileList[[n]]
+shpName <- strsplit(presFile,"\\.")[[1]][[1]]
+sppCode <- sub("_att","",shpName)
 # get the presence points
+setwd(loc_spPts)
 df.in <-read.dbf(presFile)
+print (presFile)
+
 
 setwd(loc_bkgPts)
-bk_fileList <- dir( pattern = "_clean.dbf$")
-
-bk_fileList
-#look at the output and choose which shapefile you want to run
-#enter its location in the list (first = 1, second = 2, etc)
-n <- 1
-bkgFile <- bk_fileList[[n]]
-
+# bk_fileList <- dir( pattern = "_clean.dbf$")
+# 
+# bk_fileList
+# #look at the output and choose which shapefile you want to run
+# #enter its location in the list (first = 1, second = 2, etc)
+# n <- 1
+# bkgFile <- bk_fileList[[3]]
+bkgFile<-paste0(sppCode,"_clean.dbf")
 # absence points
 df.abs <- foreign:::read.dbf(bkgFile)
 
@@ -569,7 +585,10 @@ for(i in 1:9){
 #save the project, return to the original working directory
 setwd(loc_RDataOut)
 save.image(file = paste(ElementNames$Code, "_",Sys.Date(),".Rdata", sep=""))
+rm(list=ls()[!ls() %in% 
+               c("p_fileList","loc_scripts","loc_RDataOut","loc_bkgPts","loc_spPts","loc_envVars","nm_db_file","loc_otherSpatial","len_fileList")])
 
+}
 ## clean up ----
 # remove all objects before moving on to the next script
 rm(list=ls())
